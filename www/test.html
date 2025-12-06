@@ -1,0 +1,529 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8" />
+    <title>Uccello volante Sprite - Con Monete</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <style>
+        * {box-sizing: border-box;margin: 0;padding: 0;font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;}
+        body {background: #111827;color: #e5e7eb;display: flex;justify-content: center;align-items: center;min-height: 100vh;}
+
+        .game-wrapper {background: #020617;border-radius: 16px;padding: 16px 20px 20px;box-shadow: 0 10px 30px rgba(0,0,0,0.5);width: 420px;max-width: 100%;}
+        .header {display: flex;justify-content: space-between;align-items: center;margin-bottom: 10px;}
+        .title {font-size: 1.1rem;font-weight: 600;color: #f9fafb;}
+
+        .header-right { display: flex; gap: 10px; align-items: center; }
+        .score {font-size: 0.95rem;padding: 4px 10px;border-radius: 999px;background: #0f172a;border: 1px solid #1f2937;}
+        .score span {font-weight: 700;color: #22c55e;}
+
+        .mute-btn { background: none; border: none; color: #6b7280; cursor: pointer; font-size: 1.2rem; transition: color 0.2s; }
+        .mute-btn:hover { color: #e5e7eb; }
+
+        .game-area {position: relative;margin-top: 6px;width: 100%;max-width: 380px;height: 540px;border-radius: 12px;overflow: hidden;background: radial-gradient(circle at top, #1f2937 0, #020617 60%);border: 2px solid #1f2937;margin-inline: auto;touch-action: none;}
+
+        .lane {position: absolute;top: 0;bottom: 0;width: 2px;background: rgba(148,163,184,0.15);left: 33.33%;}
+        .lane:nth-child(2) {left: 66.66%;}
+
+        /* --- PLAYER SPRITE --- */
+        .player {
+            position: absolute;
+            width: 64px;
+            height: 64px;
+            /* Assicurati che questo file esista nella cartella */
+            background-image: url('bird-sprite-removebg-preview.png');
+            background-size: 200% 200%;
+            background-repeat: no-repeat;
+            background-position: 0% 0%;
+            background-color: transparent;
+            left: 50%;
+            top: 400px;
+            cursor: grab;
+            touch-action: none;
+            z-index: 10;
+            animation: fly-cycle 0.4s steps(1) infinite;
+            transition: transform 0.1s;
+        }
+
+        @keyframes fly-cycle {
+            0% { background-position: 0% 0%; }
+            33% { background-position: 0% 100%; }
+            66% { background-position: 100% 100%; }
+            100% { background-position: 0% 0%; }
+        }
+
+        .player:active {cursor: grabbing;}
+        .player.dead {
+            animation-play-state: paused;
+            filter: grayscale(100%) brightness(0.8);
+        }
+
+        /* --- PALLA DI FUOCO (MODIFICATA CON GIF) --- */
+        .obstacle {
+            position: absolute;
+            width: 65px;  /* Leggermente più grande per compensare i bordi vuoti dell'immagine */
+            height: 65px;
+
+            /* QUI HO INSERITO LA TUA GIF */
+            background-image: url('fireball.gif');
+
+            background-size: contain;
+            background-repeat: no-repeat;
+            background-position: center;
+            background-color: transparent;
+
+            /* Rimosso i bordi e l'ombra CSS per usare solo l'immagine */
+            border: none;
+            box-shadow: none;
+            border-radius: 0;
+
+            z-index: 5;
+        }
+
+        /* --- MONETA D'ORO --- */
+        .coin {
+            position: absolute;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: radial-gradient(circle at 30% 30%, #fef08a, #eab308);
+            border: 2px solid #a16207;
+            box-shadow: 0 0 10px rgba(234, 179, 8, 0.6);
+            z-index: 6;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 20px;
+            font-weight: bold;
+            color: #713f12;
+            animation: spin 1s infinite alternate;
+        }
+        .coin::after {
+            content: '$';
+        }
+
+        @keyframes spin {
+            0% { transform: scale(1); }
+            100% { transform: scale(1.1); box-shadow: 0 0 15px rgba(234, 179, 8, 0.9); }
+        }
+
+        .score-pop {
+            position: absolute;
+            color: #fbbf24;
+            font-weight: bold;
+            font-size: 1.2rem;
+            animation: floatUp 0.8s forwards;
+            z-index: 20;
+            pointer-events: none;
+        }
+        @keyframes floatUp {
+            0% { transform: translateY(0); opacity: 1; }
+            100% { transform: translateY(-30px); opacity: 0; }
+        }
+
+
+        .hud {margin-top: 10px;display: flex;justify-content: space-between;align-items: center;gap: 8px;font-size: 0.85rem;}
+        .btn {padding: 6px 14px;border-radius: 999px;border: none;background: linear-gradient(135deg, #22c55e, #16a34a);color: #022c22;font-weight: 600;cursor: pointer;transition: transform 0.08s ease, box-shadow 0.08s ease, opacity 0.15s;box-shadow: 0 4px 10px rgba(16,185,129,0.4);white-space: nowrap;}
+        .btn:hover {transform: translateY(-1px);box-shadow: 0 6px 14px rgba(16,185,129,0.7);}
+        .btn:active {transform: translateY(0);box-shadow: 0 2px 6px rgba(16,185,129,0.4);opacity: 0.9;}
+        .instructions {color: #9ca3af;line-height: 1.4;}
+        .highlight {color: #e5e7eb;font-weight: 600;}
+
+        .game-over-overlay {position: absolute;inset: 0;background: rgba(15,23,42,0.92);display: flex;flex-direction: column;justify-content: center;align-items: center;gap: 10px;text-align: center;padding: 0 20px;color: #e5e7eb;z-index: 20;}
+        .game-over-overlay h2 {font-size: 1.4rem;margin-bottom: 4px;}
+        .game-over-overlay p {font-size: 0.9rem;color: #9ca3af;}
+        .best-score {font-size: 0.85rem;margin-top: 2px;color: #a5b4fc;}
+
+        @media (max-width: 480px) {
+            .game-wrapper {width: 100%;border-radius: 0;min-height: 100vh;box-shadow: none;}
+            body {align-items: stretch;}
+        }
+    </style>
+</head>
+<body>
+<div class="game-wrapper">
+    <div class="header">
+        <div class="title">Uccello by Jorge e Karim</div>
+        <div class="header-right">
+            <button class="mute-btn" id="muteBtn" title="Attiva/Disattiva Audio">🔊</button>
+            <div class="score">Score: <span id="score">0</span></div>
+        </div>
+    </div>
+    <div class="game-area" id="gameArea">
+        <div class="lane"></div>
+        <div class="lane"></div>
+        <div class="player" id="player"></div>
+    </div>
+    <div class="hud">
+        <button class="btn" id="startBtn">▶ Start / Restart</button>
+        <div class="instructions">
+            Trascina l'<span class="highlight">uccello</span>, evita il fuoco e prendi le monete!
+        </div>
+    </div>
+</div>
+
+<script>
+    const gameArea = document.getElementById("gameArea");
+    const playerEl = document.getElementById("player");
+    const scoreEl = document.getElementById("score");
+    const startBtn = document.getElementById("startBtn");
+    const muteBtn = document.getElementById("muteBtn");
+
+    // --- CONFIGURAZIONE AUDIO ---
+    const bgMusic = new Audio('https://assets.mixkit.co/music/preview/mixkit-tech-house-vibes-130.mp3');
+    bgMusic.loop = true;
+    bgMusic.volume = 0.3;
+
+    const crashSound = new Audio('https://assets.mixkit.co/sfx/preview/mixkit-arcade-retro-game-over-213.wav');
+    crashSound.volume = 0.5;
+
+    const coinSound = new Audio('https://assets.mixkit.co/sfx/preview/mixkit-arcade-game-jump-coin-216.wav');
+    coinSound.volume = 0.6;
+
+    let isMuted = false;
+
+    // --- FUNZIONI AUDIO ---
+    function playMusic() {
+        if(!isMuted) {
+            bgMusic.currentTime = 0;
+            bgMusic.play().catch(e => console.log("Interazione utente richiesta per l'audio"));
+        }
+    }
+
+    function stopMusic() {
+        bgMusic.pause();
+    }
+
+    function playCrash() {
+        if(!isMuted) {
+            crashSound.currentTime = 0;
+            crashSound.play();
+        }
+    }
+
+    function playCoinSound() {
+        if(!isMuted) {
+            const sound = coinSound.cloneNode();
+            sound.volume = 0.6;
+            sound.play();
+        }
+    }
+
+    muteBtn.addEventListener("click", () => {
+        isMuted = !isMuted;
+        muteBtn.textContent = isMuted ? "🔇" : "🔊";
+        if(isMuted) bgMusic.pause();
+        else if(isRunning) bgMusic.play();
+    });
+    // ----------------------------
+
+    let playerX = 0;
+    let playerY = 0;
+    let playerSpeed = 8;
+
+    let obstacles = [];
+    let coins = [];
+
+    let lastTimestamp = 0;
+    let isRunning = false;
+    let score = 0;
+    let bestScore = 0;
+
+    let obstacleSpawnTimer = 0;
+    let obstacleSpawnInterval = 900;
+
+    let coinSpawnTimer = 0;
+    let coinSpawnInterval = 1500;
+
+    let baseFallSpeed = 150;
+    let keys = { left: false, right: false, up: false, down: false };
+    let isDragging = false;
+
+    let facingDirection = 1;
+
+    function setInitialPlayerPosition() {
+        const areaRect = gameArea.getBoundingClientRect();
+        playerX = areaRect.width / 2 - playerEl.offsetWidth / 2;
+        playerY = areaRect.height - playerEl.offsetHeight - 20;
+        playerEl.style.left = playerX + "px";
+        playerEl.style.top = playerY + "px";
+
+        playerEl.classList.remove('dead');
+        playerEl.style.transform = "scaleX(1)";
+        facingDirection = 1;
+    }
+
+    function resetGame() {
+        setInitialPlayerPosition();
+        obstacles.forEach(o => o.el.remove());
+        obstacles = [];
+        coins.forEach(c => c.el.remove());
+        coins = [];
+        document.querySelectorAll('.score-pop').forEach(el => el.remove());
+
+        score = 0;
+        scoreEl.textContent = "0";
+        obstacleSpawnTimer = 0;
+        coinSpawnTimer = 0;
+        baseFallSpeed = 150;
+        lastTimestamp = performance.now();
+    }
+
+    function spawnObstacle() {
+        const obstacleEl = document.createElement("div");
+        obstacleEl.classList.add("obstacle");
+        const areaRect = gameArea.getBoundingClientRect();
+        // Nota: uso 65px per il calcolo della larghezza massima siccome ho ingrandito un po' l'ostacolo nel CSS
+        const maxX = areaRect.width - 65;
+        const x = Math.random() * maxX;
+        obstacleEl.style.left = x + "px";
+        obstacleEl.style.top = "-70px";
+        gameArea.appendChild(obstacleEl);
+        obstacles.push({el: obstacleEl, x, y: -70});
+    }
+
+    function spawnCoin() {
+        const coinEl = document.createElement("div");
+        coinEl.classList.add("coin");
+        const areaRect = gameArea.getBoundingClientRect();
+        const maxX = areaRect.width - 40;
+        const x = Math.random() * maxX;
+
+        coinEl.style.left = x + "px";
+        coinEl.style.top = "-50px";
+        gameArea.appendChild(coinEl);
+        coins.push({el: coinEl, x, y: -50});
+    }
+
+    function showScorePop(x, y, amount) {
+        const pop = document.createElement("div");
+        pop.classList.add("score-pop");
+        pop.textContent = `+${amount}`;
+        pop.style.left = x + "px";
+        pop.style.top = y + "px";
+        gameArea.appendChild(pop);
+        setTimeout(() => pop.remove(), 800);
+    }
+
+    function updatePlayer() {
+        const areaRect = gameArea.getBoundingClientRect();
+        const maxX = areaRect.width - playerEl.offsetWidth;
+        const maxY = areaRect.height - playerEl.offsetHeight;
+        const minX = 0;
+        const minY = 0;
+
+        let movedX = 0;
+
+        if (keys.left) { playerX -= playerSpeed; movedX = -1; }
+        if (keys.right) { playerX += playerSpeed; movedX = 1; }
+        if (keys.up) playerY -= playerSpeed;
+        if (keys.down) playerY += playerSpeed;
+
+        if (movedX !== 0) {
+            facingDirection = movedX;
+            playerEl.style.transform = `scaleX(${facingDirection})`;
+        }
+
+        if (playerX < minX) playerX = minX;
+        if (playerX > maxX) playerX = maxX;
+        if (playerY < minY) playerY = minY;
+        if (playerY > maxY) playerY = maxY;
+
+        playerEl.style.left = playerX + "px";
+        playerEl.style.top = playerY + "px";
+    }
+
+    function checkCollision(rect1, rect2) {
+        const padding = 15;
+        return !(
+            rect1.right - padding < rect2.left ||
+            rect1.left + padding > rect2.right ||
+            rect1.bottom - padding < rect2.top ||
+            rect1.top + padding > rect2.bottom
+        );
+    }
+
+    function endGame() {
+        isRunning = false;
+        isDragging = false;
+        playerEl.classList.add('dead');
+        stopMusic();
+        playCrash();
+        if (score > bestScore) bestScore = score;
+        showGameOverOverlay();
+    }
+
+    function showGameOverOverlay() {
+        const oldOverlay = gameArea.querySelector(".game-over-overlay");
+        if (oldOverlay) oldOverlay.remove();
+        const overlay = document.createElement("div");
+        overlay.classList.add("game-over-overlay");
+        overlay.innerHTML = `
+                <h2>Game Over</h2>
+                <div>Score: <strong>${Math.floor(score)}</strong></div>
+                <div class="best-score">Best: ${Math.floor(bestScore)}</div>
+                <p>Premi <strong>Start / Restart</strong> per riprovare.</p>
+            `;
+        gameArea.appendChild(overlay);
+    }
+
+    function hideGameOverOverlay() {
+        const overlay = gameArea.querySelector(".game-over-overlay");
+        if (overlay) overlay.remove();
+    }
+
+    function gameLoop(timestamp) {
+        if (!isRunning) return;
+        const delta = timestamp - lastTimestamp;
+        lastTimestamp = timestamp;
+
+        updatePlayer();
+
+        const fallSpeed = baseFallSpeed + score * 0.5;
+        const deltaY = (fallSpeed * delta) / 1000;
+
+        obstacles.forEach(o => {
+            o.y += deltaY;
+            o.el.style.top = o.y + "px";
+        });
+        obstacles = obstacles.filter(o => {
+            if (o.y > gameArea.clientHeight + 100) {
+                o.el.remove();
+                return false;
+            }
+            return true;
+        });
+
+        coins.forEach(c => {
+            c.y += deltaY;
+            c.el.style.top = c.y + "px";
+        });
+        coins = coins.filter(c => {
+            if (c.y > gameArea.clientHeight + 100) {
+                c.el.remove();
+                return false;
+            }
+            return true;
+        });
+
+        const playerRect = playerEl.getBoundingClientRect();
+
+        for (const o of obstacles) {
+            const obstacleRect = o.el.getBoundingClientRect();
+            if (checkCollision(playerRect, obstacleRect)) {
+                endGame();
+                return;
+            }
+        }
+
+        for (let i = coins.length - 1; i >= 0; i--) {
+            const c = coins[i];
+            const coinRect = c.el.getBoundingClientRect();
+            const hit = !(
+                playerRect.right < coinRect.left ||
+                playerRect.left > coinRect.right ||
+                playerRect.bottom < coinRect.top ||
+                playerRect.top > coinRect.bottom
+            );
+
+            if (hit) {
+                playCoinSound();
+                score += 50;
+                showScorePop(c.x, c.y, 50);
+                c.el.remove();
+                coins.splice(i, 1);
+            }
+        }
+
+        obstacleSpawnTimer += delta;
+        if (obstacleSpawnTimer >= obstacleSpawnInterval) {
+            obstacleSpawnTimer = 0;
+            spawnObstacle();
+        }
+
+        coinSpawnTimer += delta;
+        if (coinSpawnTimer >= coinSpawnInterval) {
+            coinSpawnTimer = 0;
+            spawnCoin();
+        }
+
+        score += delta * 0.01;
+        scoreEl.textContent = Math.floor(score);
+        requestAnimationFrame(gameLoop);
+    }
+
+    function movePlayerToPointer(e) {
+        const rect = gameArea.getBoundingClientRect();
+        const pointerX = e.clientX - rect.left;
+        const pointerY = e.clientY - rect.top;
+
+        const maxX = rect.width - playerEl.offsetWidth;
+        const maxY = rect.height - playerEl.offsetHeight;
+        const minX = 0;
+        const minY = 0;
+
+        let newX = pointerX - playerEl.offsetWidth / 2;
+        let newY = pointerY - playerEl.offsetHeight / 2;
+
+        if (newX < playerX) facingDirection = -1;
+        if (newX > playerX) facingDirection = 1;
+
+        playerEl.style.transform = `scaleX(${facingDirection})`;
+
+        if (newX < minX) newX = minX;
+        if (newX > maxX) newX = maxX;
+        if (newY < minY) newY = minY;
+        if (newY > maxY) newY = maxY;
+
+        playerX = newX;
+        playerY = newY;
+        playerEl.style.left = playerX + "px";
+        playerEl.style.top = playerY + "px";
+    }
+
+    function onPointerDown(e) {
+        if(!isRunning) return;
+        e.preventDefault();
+        isDragging = true;
+        movePlayerToPointer(e);
+    }
+    function onPointerMove(e) {
+        if (!isDragging) return;
+        e.preventDefault();
+        movePlayerToPointer(e);
+    }
+    function onPointerUp(e) { isDragging = false; }
+
+    gameArea.addEventListener("pointerdown", onPointerDown, { passive: false });
+    window.addEventListener("pointermove", onPointerMove, { passive: false });
+    window.addEventListener("pointerup", onPointerUp, { passive: false });
+    window.addEventListener("pointercancel", onPointerUp, { passive: false });
+
+    window.addEventListener("keydown", (e) => {
+        if (["ArrowLeft","a","A"].includes(e.key)) keys.left = true;
+        if (["ArrowRight","d","D"].includes(e.key)) keys.right = true;
+        if (["ArrowUp","w","W"].includes(e.key)) keys.up = true;
+        if (["ArrowDown","s","S"].includes(e.key)) keys.down = true;
+    });
+    window.addEventListener("keyup", (e) => {
+        if (["ArrowLeft","a","A"].includes(e.key)) keys.left = false;
+        if (["ArrowRight","d","D"].includes(e.key)) keys.right = false;
+        if (["ArrowUp","w","W"].includes(e.key)) keys.up = false;
+        if (["ArrowDown","s","S"].includes(e.key)) keys.down = false;
+    });
+
+    startBtn.addEventListener("click", () => {
+        hideGameOverOverlay();
+        resetGame();
+        playMusic();
+        isRunning = true;
+        lastTimestamp = performance.now();
+        requestAnimationFrame(gameLoop);
+    });
+
+    window.addEventListener("load", () => {
+        setInitialPlayerPosition();
+        showGameOverOverlay();
+    });
+</script>
+</body>
+</html>
