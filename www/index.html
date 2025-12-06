@@ -280,17 +280,32 @@
     const startBtn = document.getElementById("startBtn");
     const muteBtn = document.getElementById("muteBtn");
 
-    const bgMusic = new Audio('https://assets.mixkit.co/music/preview/mixkit-tech-house-vibes-130.mp3');
-    bgMusic.loop = true; bgMusic.volume = 0.3;
-    const crashSound = new Audio('https://assets.mixkit.co/sfx/preview/mixkit-arcade-retro-game-over-213.wav');
+
+
+    // --- CONFIGURAZIONE AUDIO (LINK FUNZIONANTI) ---
+
+    // Musica di sottofondo (Eric Skiff - Royalty Free da Archive.org)
+    const bgMusic = new Audio('https://commondatastorage.googleapis.com/codeskulptor-assets/Epoq-Lepidoptera.ogg');
+    bgMusic.loop = true;
+    bgMusic.volume = 0.3;
+
+    // Suono esplosione (Google Storage - Educational Assets)
+    const crashSound = new Audio('https://commondatastorage.googleapis.com/codeskulptor-assets/sounddogs/explosion.mp3');
     crashSound.volume = 0.5;
-    const coinSound = new Audio('https://assets.mixkit.co/sfx/preview/mixkit-arcade-game-jump-coin-216.wav');
+
+    // Suono moneta (Google Storage - Educational Assets)
+    const coinSound = new Audio('https://commondatastorage.googleapis.com/codeskulptor-assets/week7-brrring.m4a');
     coinSound.volume = 0.6;
-    const smashSound = new Audio('https://assets.mixkit.co/sfx/preview/mixkit-explosion-impact-debris-1700.wav');
+
+    const smashSound = new Audio('https://commondatastorage.googleapis.com/codeskulptor-assets/sounddogs/missile.mp3');
     smashSound.volume = 0.5;
-    // Suono più potente per il gigante
-    const giantSmashSound = new Audio('https://assets.mixkit.co/sfx/preview/mixkit-cinematic-deep-impact-swish-281.wav');
-    giantSmashSound.volume = 0.7;
+
+    // Suono extra per il Gigante (opzionale, usiamo lo stesso dell'esplosione ma più forte)
+    const giantSmashSound = new Audio('https://commondatastorage.googleapis.com/codeskulptor-assets/sounddogs/explosion.mp3');
+    giantSmashSound.volume = 0.8;
+    // --------------------------------------------------------
+
+
 
     let isMuted = false;
 
