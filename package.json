@@ -4,13 +4,8 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "add_android": "npx cap add android",
-    "open_android": "npx cap open android",
-    "sync_android": "npx cap sync android",
-    "copy_android": "npx cap copy android",
-    "git_commit_push": "git add . && git commit -m \"modifiche miglioramenti\" && git push origin master",
-    "git_alias": "git fatto \"NOME DELLA  COMMIIT\""
+    "go_android": "npx cap sync android && npx cap open android",
+    "git_commit_push": "git add . && git commit -m \"modifiche miglioramenti\" && git push origin master"
   },
   "keywords": [],
   "author": "",
