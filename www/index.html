@@ -2,68 +2,145 @@
 <html lang="it">
 <head>
     <meta charset="UTF-8" />
-    <title>Uccello di Fuoco - VISIBLE BOMBS</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Uccello di Fuoco - AUDIO FIXED</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <link href="https://fonts.googleapis.com/css2?family=Lora:wght@400;700&family=Fredoka+One&display=swap" rel="stylesheet">
     <style>
-        /* --- PALETTE E COLORI (CONTRASTO MIGLIORATO) --- */
+        /* --- PALETTE E COLORI --- */
         :root {
             --bg-main-start: #1a0505; --bg-main-end: #3e1208;
-            --container-bg: rgba(30, 5, 2, 0.98);
-            /* Sfondo Scuro */
+            --container-bg: #000;
+
+            /* Sfondi Gioco */
             --sky-fire: linear-gradient(to bottom, #4a1e11 0%, #2a0a0a 80%, #000000 100%);
             --sky-blue: linear-gradient(to bottom, #0288d1 0%, #01579b 80%, #000000 100%);
             --sky-garden: linear-gradient(to bottom, #0097a7 0%, #006064 100%);
 
             --accent-gold: #ffd700; --text-light: #ffffff;
-            --lane-color: rgba(255, 255, 255, 0.1);
-            --ui-box-bg: rgba(20, 2, 2, 0.8); --ui-border: #ff4500;
+            --ui-border: #ff4500;
         }
 
-        * {box-sizing: border-box;margin: 0;padding: 0;font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;}
+        * {box-sizing: border-box;margin: 0;padding: 0;font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; user-select: none;}
 
         body {
-            background: linear-gradient(135deg, var(--bg-main-start), var(--bg-main-end));
+            background: #111;
             color: var(--text-light); display: flex; justify-content: center; align-items: center;
-            min-height: 100vh; overflow: hidden; touch-action: none;
+            min-height: 100vh; overflow: hidden; touch-action: none; margin: 0;
         }
 
+        /* Contenitore principale */
         .game-wrapper {
-            background: var(--container-bg); border-radius: 20px; padding: 20px;
-            box-shadow: 0 15px 40px rgba(0,0,0,0.9), inset 0 0 30px rgba(255, 69, 0, 0.1);
-            width: 440px; max-width: 100%; height: 700px;
-            border: 2px solid var(--ui-border); display: flex; flex-direction: column;
+            background: var(--container-bg);
+            width: 100%; max-width: 480px; height: 100vh;
+            position: relative;
+            display: flex; flex-direction: column;
+            overflow: hidden;
+            box-shadow: 0 0 50px rgba(0,0,0,0.5);
         }
 
-        .header {display: flex;justify-content: space-between;align-items: center;margin-bottom: 10px;}
-        .title {font-size: 1.2rem;font-weight: 800;color: var(--accent-gold); text-shadow: 0 2px 5px rgba(0,0,0,0.8);}
-        .header-right { display: flex; gap: 10px; align-items: center; }
+        /* --- SCHERMATA DI CARICAMENTO --- */
+        .loading-screen {
+            position: absolute; inset: 0;
+            background: linear-gradient(to bottom, #0a4e2a, #1b5e20); /* Verde Scuro */
+            z-index: 9999;
+            display: none;
+            flex-direction: column; justify-content: space-between; align-items: center;
+            padding: 50px 20px;
+            text-align: center;
+        }
+
+        .loading-quote-top {
+            font-family: 'Lora', serif;
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: #ffffff;
+            max-width: 90%;
+            line-height: 1.3;
+        }
+
+        .loading-center-content {
+            width: 100%;
+            display: flex; flex-direction: column; align-items: center;
+            gap: 15px;
+            margin-bottom: 50px;
+        }
+
+        .loading-bar-container {
+            width: 85%; height: 16px;
+            background: rgba(255,255,255,0.2);
+            border-radius: 10px;
+            position: relative;
+            overflow: visible;
+        }
+
+        .loading-bar-fill {
+            height: 100%; width: 0%; background: #4caf50;
+            border-radius: 10px; transition: width 0.1s linear;
+        }
+
+        .loading-bird {
+            position: absolute; top: -35px; left: 0%; width: 45px; height: 45px;
+            background-image: url('bird-sprite-removebg-preview.png');
+            background-size: 200% 200%; background-repeat: no-repeat; background-position: 0% 0%;
+            transform: translateX(-50%);
+            filter: drop-shadow(0 4px 4px rgba(0,0,0,0.3));
+            animation: fly-cycle 0.3s steps(1) infinite;
+            transition: left 0.1s linear;
+        }
+
+        .loading-quote-bottom {
+            font-family: 'Fredoka One', cursive;
+            font-size: 1.3rem;
+            color: #81c784;
+        }
+
+        .loading-logo {
+            font-family: 'Fredoka One', cursive;
+            font-size: 2.5rem;
+            color: #fdd835;
+            text-shadow: 2px 2px 0px #5d4037;
+            display: flex; align-items: center; gap: 10px;
+        }
+        .loading-logo::before {
+            content: '🀄'; font-size: 2rem;
+        }
+
+        /* --- UI DI GIOCO --- */
+        .header {
+            position: absolute; top: 10px; left: 10px; right: 10px;
+            display: flex; justify-content: space-between; align-items: center;
+            z-index: 20; pointer-events: none;
+        }
+        .header-right { display: flex; gap: 10px; align-items: center; pointer-events: auto; }
 
         .score {
-            font-size: 1rem; padding: 8px 16px; border-radius: 999px;
-            background: var(--ui-box-bg); border: 2px solid var(--ui-border);
-            box-shadow: 0 4px 10px rgba(0,0,0,0.5); display: flex; gap: 10px;
+            font-size: 1.2rem; padding: 5px 15px; border-radius: 999px;
+            background: rgba(0,0,0,0.6); border: 2px solid rgba(255, 255, 255, 0.3);
+            text-shadow: 1px 1px 2px black;
         }
-        .score span {font-weight: 800;color: var(--accent-gold); font-size: 1.1rem;}
-        .gen-counter { color: #39ff14; font-weight: 800; font-size: 0.9rem; }
+        .score span {font-weight: 800; color: var(--accent-gold);}
+        .gen-counter { font-size: 0.8rem; margin-left: 5px; color: #39ff14; }
 
-        .mute-btn { background: none; border: none; color: var(--accent-gold); opacity: 0.9; cursor: pointer; font-size: 1.5rem; text-shadow: 0 2px 5px rgba(0,0,0,0.5); }
+        .mute-btn { background: rgba(0,0,0,0.6); border: 2px solid rgba(255,255,255,0.3); border-radius: 50%; width: 40px; height: 40px; color: #fff; cursor: pointer; font-size: 1.2rem; display: flex; justify-content: center; align-items: center; }
 
+        /* --- AREA DI GIOCO --- */
         .game-area {
-            position: relative; flex-grow: 1; width: 100%; border-radius: 16px; overflow: hidden;
-            background: var(--sky-fire); border: 3px solid var(--ui-border);
-            box-shadow: inset 0 0 50px rgba(0,0,0,0.8); touch-action: none; cursor: grab;
+            position: absolute; inset: 0;
+            overflow: hidden;
+            background: var(--sky-fire);
+            touch-action: none; cursor: grab;
             transition: background 1.5s ease;
         }
         .game-area:active { cursor: grabbing; }
 
-        /* --- SCENA FINALE --- */
+        /* --- SCENARIO CUTSCENE --- */
         .scene-container { position: absolute; bottom: 0; left: 0; right: 0; height: 100%; pointer-events: none; display: none; z-index: 8; }
-        .tree-trunk { position: absolute; bottom: 0; right: 20%; width: 60px; height: 400px; background: linear-gradient(to right, #3e2723, #5d4037); border-radius: 10px 10px 0 0; box-shadow: 5px 0 15px rgba(0,0,0,0.5); }
-        .branch { position: absolute; bottom: 250px; right: 20%; width: 150px; height: 20px; background: #5d4037; transform: rotate(-10deg); border-radius: 10px; box-shadow: 0 5px 10px rgba(0,0,0,0.3); }
-        .nest { position: absolute; bottom: 265px; right: 45%; width: 80px; height: 40px; background: #8d6e63; border-radius: 0 0 40px 40px; border: 4px solid #5d4037; z-index: 9; overflow: visible; box-shadow: 0 5px 15px rgba(0,0,0,0.4); }
+        .tree-trunk { position: absolute; bottom: 0; right: 20%; width: 60px; height: 400px; background: linear-gradient(to right, #3e2723, #5d4037); border-radius: 10px 10px 0 0; }
+        .branch { position: absolute; bottom: 250px; right: 20%; width: 150px; height: 20px; background: #5d4037; transform: rotate(-10deg); border-radius: 10px; }
+        .nest { position: absolute; bottom: 265px; right: 45%; width: 80px; height: 40px; background: #8d6e63; border-radius: 0 0 40px 40px; border: 4px solid #5d4037; z-index: 9; overflow: visible; }
         .eggs-container { position: absolute; top: -15px; left: 15px; display: flex; gap: 2px; }
-        .egg { width: 15px; height: 20px; background: #fff8e1; border-radius: 50%; border: 1px solid #d7ccc8; box-shadow: 1px 1px 3px rgba(0,0,0,0.3); }
-        .leaf { position: absolute; background: rgba(46, 125, 50, 0.9); border-radius: 50%; box-shadow: 2px 2px 5px rgba(0,0,0,0.3); }
+        .egg { width: 15px; height: 20px; background: #fff8e1; border-radius: 50%; border: 1px solid #d7ccc8; }
+        .leaf { position: absolute; background: rgba(46, 125, 50, 0.9); border-radius: 50%; }
 
         /* --- PLAYER --- */
         .player {
@@ -73,14 +150,20 @@
             background-color: transparent; left: 50%; top: 380px; z-index: 10;
             animation: fly-cycle 0.4s steps(1) infinite;
             transition: transform 0.1s, filter 0.3s ease;
-            filter: sepia(100%) saturate(2000%) hue-rotate(20deg) brightness(120%) drop-shadow(0 0 15px rgba(255, 215, 0, 0.8));
+            filter: sepia(100%) saturate(2000%) hue-rotate(20deg) brightness(120%);
             pointer-events: none;
         }
-        .player.super-mode { filter: sepia(100%) saturate(2500%) hue-rotate(-60deg) brightness(1.1) contrast(150%) drop-shadow(0 0 40px rgba(255, 0, 0, 1)) !important; }
-        .player.ultra-mode { filter: sepia(100%) saturate(800%) hue-rotate(70deg) brightness(1.5) contrast(130%) drop-shadow(0 0 60px rgba(50, 255, 50, 1)) !important; z-index: 12; }
+        .player.super-mode { filter: sepia(100%) saturate(2500%) hue-rotate(-60deg) brightness(1.1) contrast(150%) !important; }
+        .player.ultra-mode { filter: sepia(100%) saturate(800%) hue-rotate(70deg) brightness(1.5) contrast(130%) !important; z-index: 12; }
         .player.landing { animation: fly-cycle 0.2s steps(1) infinite; filter: none !important; transform: scale(0.6) !important; transition: left 2s, top 2s; }
         .player.incubating { animation: happy-bounce 0.5s infinite alternate !important; filter: none !important; transform: scale(0.7) !important; transition: left 2s, top 2s; }
         @keyframes happy-bounce { from { margin-top: 0; } to { margin-top: -10px; } }
+
+        .carried-baby {
+            position: absolute; top: -15px; left: 25%; width: 45px; height: 45px;
+            background-image: url('bird-sprite-removebg-preview.png'); background-size: 200% 200%; background-repeat: no-repeat;
+            display: none; z-index: 11;
+        }
 
         .companion {
             position: absolute; width: 60px; height: 60px;
@@ -88,7 +171,7 @@
             background-size: 200% 200%; background-repeat: no-repeat; background-position: 0% 0%;
             z-index: 9; animation: fly-cycle 0.3s steps(1) infinite;
             transition: transform 0.2s, filter 0.3s ease; display: none;
-            filter: sepia(100%) saturate(2000%) hue-rotate(20deg) brightness(120%) drop-shadow(0 0 10px rgba(255, 215, 0, 0.6));
+            filter: sepia(100%) saturate(2000%) hue-rotate(20deg) brightness(120%);
             pointer-events: none;
         }
         .companion.ultra-mode { filter: sepia(100%) saturate(800%) hue-rotate(70deg) brightness(1.5) contrast(130%); }
@@ -96,50 +179,41 @@
         @keyframes fly-cycle { 0% { background-position: 0% 0%; } 33% { background-position: 0% 100%; } 66% { background-position: 100% 100%; } 100% { background-position: 0% 0%; } }
         .player.dead { animation-play-state: paused; filter: grayscale(100%) brightness(0.4) contrast(1.2) !important; }
 
-        /* --- TESCHI (Colori Neon) --- */
+        /* --- TESCHI E BOMBE --- */
         .obstacle {
             position: absolute; width: 90px; height: 100px;
             background-image: url('fire-36.gif');
             background-size: 100% 100%; background-repeat: no-repeat; background-position: center;
             mix-blend-mode: screen; z-index: 5;
         }
-        /* Colori */
-        .obstacle.orange { filter: brightness(1.3) saturate(1.5); drop-shadow(0 0 10px orange); }
-        .obstacle.bordeaux { filter: hue-rotate(280deg) brightness(1.2) saturate(3); drop-shadow(0 0 15px purple); }
-        .obstacle.green { filter: hue-rotate(80deg) brightness(1.4) saturate(2.5); drop-shadow(0 0 15px lime); }
-        .obstacle.darkred { filter: sepia(1) saturate(6) hue-rotate(-20deg) brightness(0.9); drop-shadow(0 0 20px red); }
+        .obstacle.orange { filter: brightness(1.3) saturate(1.5); }
+        .obstacle.bordeaux { filter: hue-rotate(280deg) brightness(1.2) saturate(3); }
+        .obstacle.green { filter: hue-rotate(80deg) brightness(1.4) saturate(2.5); }
+        .obstacle.darkred { filter: sepia(1) saturate(6) hue-rotate(-20deg) brightness(0.9); }
 
-        /* --- TESCHIO BOMBA (VISIBILE ORA) --- */
         .obstacle.bomb {
-            /* Grigio metallico scuro, NON nero invisibile */
-            /* filter: grayscale(100%) brightness(0.7) contrast(1.3); */
-            /* Aggiunto bordo rosso luminoso tramite drop-shadow multiplo */
-            filter: grayscale(100%) brightness(0.7) contrast(1.5) drop-shadow(0 0 5px #ff0000) drop-shadow(0 0 15px #8b0000);
-            z-index: 6;
-            animation: bomb-pulse 0.4s infinite alternate;
+            filter: grayscale(100%) brightness(0.8) contrast(1.5);
+            z-index: 6; animation: bomb-pulse 0.4s infinite alternate;
         }
-
-        /* LA MICCIA */
         .obstacle.bomb::before {
             content: ''; position: absolute; top: -15px; left: 50%; width: 4px; height: 15px;
-            background: #8d6e63; transform: translateX(-50%) rotate(-10deg); border-radius: 2px; z-index: 7;
-            border: 1px solid #fff;
+            background: #8d6e63; transform: translateX(-50%) rotate(-10deg); border-radius: 2px; z-index: 7; border: 1px solid #fff;
         }
-
-        /* LA SCINTILLA */
         .obstacle.bomb::after {
             content: ''; position: absolute; top: -28px; left: 48%; width: 14px; height: 14px;
             background: radial-gradient(circle, #ffffff, #ffff00, #ff0000); border-radius: 50%;
-            transform: translateX(-50%); z-index: 8; box-shadow: 0 0 20px #ffff00;
+            transform: translateX(-50%); z-index: 8; box-shadow: 0 0 10px #ffff00;
             animation: fuse-burn 0.1s infinite alternate;
         }
+        @keyframes bomb-pulse { from { transform: scale(1); } to { transform: scale(1.1); } }
+        @keyframes fuse-burn { 0% { transform: translateX(-50%) scale(1); opacity: 0.8; } 100% { transform: translateX(-50%) scale(1.5); opacity: 1; } }
 
-        @keyframes bomb-pulse { from { transform: scale(1); } to { transform: scale(1.15); } }
-        @keyframes fuse-burn { 0% { transform: translateX(-50%) scale(1); opacity: 0.8; } 100% { transform: translateX(-50%) scale(1.8); opacity: 1; } }
-
-        .coin { position: absolute; width: 42px; height: 42px; border-radius: 50%; background: radial-gradient(circle at 30% 30%, #ffffff, #ffd700, #ff8c00); border: 3px solid #b8860b; box-shadow: 0 0 20px rgba(255, 215, 0, 0.9); z-index: 6; display: flex; justify-content: center; align-items: center; font-size: 24px; font-weight: 900; color: #5c1a0a; animation: spin 1s infinite alternate; text-shadow: 1px 1px 2px rgba(255,255,255,0.5); }
+        .coin { position: absolute; width: 42px; height: 42px; border-radius: 50%; background: radial-gradient(circle at 30% 30%, #ffffff, #ffd700, #ff8c00); border: 3px solid #b8860b; box-shadow: 0 0 10px rgba(255, 215, 0, 0.8); z-index: 6; display: flex; justify-content: center; align-items: center; font-size: 24px; font-weight: 900; color: #5c1a0a; animation: spin 1s infinite alternate; text-shadow: 1px 1px 2px rgba(255,255,255,0.5); }
         .coin::after { content: '$'; }
         @keyframes spin { 0% { transform: scale(1); } 100% { transform: scale(1.2); } }
+
+        .flying-nest { position: absolute; width: 70px; height: 40px; background: #8d6e63; border-radius: 0 0 40px 40px; border: 3px solid #5d4037; z-index: 6; display: flex; justify-content: center; align-items: flex-start; box-shadow: 0 5px 15px rgba(0,0,0,0.5); }
+        .flying-nest::after { content: '🪹'; font-size: 20px; position: absolute; top: -15px; }
 
         .explosion { position: absolute; width: 120px; height: 120px; background: radial-gradient(circle, #ff4500, #ffcc00, transparent); border-radius: 50%; animation: explode 0.4s forwards; z-index: 15; pointer-events: none; mix-blend-mode: screen; }
         @keyframes explode { 0% { transform: scale(0.5); opacity: 1; } 100% { transform: scale(2.5); opacity: 0; } }
@@ -148,294 +222,275 @@
         .score-pop { position: absolute; color: var(--accent-gold); font-weight: 900; font-size: 1.6rem; animation: floatUp 0.8s forwards; z-index: 20; pointer-events: none; text-shadow: 0 0 8px #000, 0 0 4px var(--accent-gold); }
         @keyframes floatUp { 0% { transform: translateY(0); opacity: 1; } 100% { transform: translateY(-50px); opacity: 0; } }
 
-        .super-text { position: absolute; top: 30%; left: 50%; transform: translate(-50%, -50%); font-size: 2.2rem; font-weight: 900; z-index: 30; animation: pulse-text 0.2s infinite alternate; pointer-events: none; text-align: center; width: 100%; text-shadow: 3px 3px 6px #000; }
-        .super-text.blood { color: #ff0000; text-shadow: 0 0 40px red, 0 0 10px white; }
-        .super-text.green { color: #39ff14; font-size: 2.8rem; text-shadow: 0 0 50px #39ff14, 0 0 15px white; }
-        .super-text.ending { color: #ffffff; font-size: 2.2rem; text-shadow: 0 0 30px #00bfff; top: 50%; }
-        .super-text.danger { color: #ffffff; -webkit-text-stroke: 2px red; font-size: 3rem; text-shadow: 0 0 40px red; }
-        @keyframes pulse-text { from { transform: translate(-50%, -50%) scale(1); } to { transform: translate(-50%, -50%) scale(1.1); } }
-
-        .hud {margin-top: 15px; display: flex;flex-direction: column; gap: 10px; align-items: center; font-size: 1rem; text-align: center;}
-        .btn { padding: 12px 24px; border-radius: 999px; border: none; background: linear-gradient(to right, #ff4500, #ffd700); color: #4a1e11; font-weight: 800; font-size: 1.1rem; cursor: pointer; box-shadow: 0 5px 20px rgba(255, 69, 0, 0.6); text-transform: uppercase; border: 2px solid #ffffff; }
-        .instructions {color: #ffffff; line-height: 1.5; font-weight: 600; text-shadow: 1px 1px 3px #000;}
-        .highlight-red {color: #ff4500; font-weight: 800; text-shadow: 0 0 10px red;}
-        .highlight-green {color: #39ff14; font-weight: 800; text-shadow: 0 0 10px #39ff14;}
-
-        .game-over-overlay { position: absolute; inset: 0; background: rgba(10, 0, 0, 0.98); display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 20px; text-align: center; color: #fff7e6; z-index: 50; }
-        .game-over-overlay h2 { font-size: 3rem; color: #ff0000; text-transform: uppercase; text-shadow: 0 0 30px rgba(255,0,0,0.8), 0 0 10px white; }
-        .best-score {font-size: 1.2rem; color: #ffd700; margin-top: 5px; font-weight: bold;}
+        /* OVERLAY START */
+        .game-over-overlay { position: absolute; inset: 0; background: rgba(0, 0, 0, 0.95); display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 20px; text-align: center; color: #fff; z-index: 50; }
+        .game-over-overlay h2 { font-size: 3rem; color: #ff4500; text-transform: uppercase; text-shadow: 0 0 30px rgba(255,69,0,0.8); margin: 0; }
+        .btn { padding: 15px 40px; border-radius: 50px; border: none; background: linear-gradient(to right, #ff4500, #ffd700); color: #4a1e11; font-weight: 900; font-size: 1.5rem; cursor: pointer; box-shadow: 0 0 20px rgba(255, 69, 0, 0.6); text-transform: uppercase; border: 3px solid #ffffff; transition: transform 0.1s; }
+        .btn:active { transform: scale(0.95); }
+        .instructions { margin-top: 20px; color: #aaa; font-size: 0.9rem; max-width: 80%; line-height: 1.4; }
+        .hidden { display: none !important; }
     </style>
 </head>
 <body>
 <div class="game-wrapper">
-    <div class="header">
-        <div class="title">Uccello di Fuoco </div>
+    <div class="header" id="gameHeader" style="display:none;">
+        <div class="score">
+            <span id="levelBadge" style="margin-right:10px; color:cyan;">LV.1</span>
+            Score: <span id="score">0</span>
+            <span class="baby-counter" id="babyCounter" style="display:none; margin-left:10px;">🐣 0/3</span>
+        </div>
         <div class="header-right">
             <button class="mute-btn" id="muteBtn">🔊</button>
-            <div class="score">
-                Score: <span id="score">0</span>
-                <div class="gen-counter">Gen: <span id="genCount">1</span></div>
-            </div>
         </div>
     </div>
+
     <div class="game-area" id="gameArea">
+        <div class="loading-screen" id="loadingScreen">
+            <div class="loading-quote-top">"protegge la natura per ciclo di vita sano"</div>
+            <div class="loading-center-content">
+                <div class="loading-bar-container">
+                    <div class="loading-bird" id="loadingBird"></div>
+                    <div class="loading-bar-fill" id="loadingFill"></div>
+                </div>
+                <div class="loading-quote-bottom">- vita e amore fano la differenza</div>
+            </div>
+            <div class="loading-logo">Vita Mahjong</div>
+        </div>
+
+        <div class="game-over-overlay" id="startScreen">
+            <h2>UCCELLO DI FUOCO</h2>
+            <div class="instructions">
+                <strong>TRASCINA</strong> per muoverti.<br>
+                Evita le bombe nere.<br>
+                100pts = Sangue | 1000pts = Gigante
+            </div>
+            <button class="btn" id="startBtn">INIZIO GIOCO</button>
+        </div>
+
         <div class="scene-container" id="sceneContainer">
             <div class="tree-trunk"></div> <div class="branch"></div>
-            <div class="nest">
-                <div class="eggs-container" id="eggs">
-                    <div class="egg"></div><div class="egg"></div><div class="egg"></div>
-                </div>
-            </div>
+            <div class="nest"><div class="eggs-container" id="eggs"><div class="egg"></div><div class="egg"></div><div class="egg"></div></div></div>
             <div class="leaf" style="bottom: 350px; right: 15%; width: 100px; height: 100px;"></div>
             <div class="leaf" style="bottom: 380px; right: 25%; width: 80px; height: 80px;"></div>
             <div class="leaf" style="bottom: 320px; right: 5%; width: 90px; height: 90px;"></div>
         </div>
-        <div class="lane"></div> <div class="lane"></div>
-        <div class="player" id="player"></div>
+
+        <div class="player" id="player">
+            <div class="carried-baby" id="carriedBaby"></div>
+        </div>
         <div class="companion" id="companion1"></div>
         <div class="companion" id="companion2"></div>
-    </div>
-    <div class="hud">
-        <button class="btn" id="startBtn">▶ GIOCA ORA</button>
-        <div class="instructions">
-            <strong>Trascina</strong> l'uccello. Spacca i teschi col potere!<br>
-            <span style="color:red; font-weight:bold; text-shadow: 0 0 10px red;">ATTENZIONE:</span> Evita i teschi con la miccia!
-        </div>
     </div>
 </div>
 
 <script>
     const gameArea = document.getElementById("gameArea");
+    const gameHeader = document.getElementById("gameHeader");
     const playerEl = document.getElementById("player");
+    const carriedBaby = document.getElementById("carriedBaby");
     const companion1 = document.getElementById("companion1");
     const companion2 = document.getElementById("companion2");
     const sceneContainer = document.getElementById("sceneContainer");
     const eggsContainer = document.getElementById("eggs");
     const scoreEl = document.getElementById("score");
-    const genCountEl = document.getElementById("genCount");
+    const levelBadge = document.getElementById("levelBadge");
+    const babyCounter = document.getElementById("babyCounter");
     const startBtn = document.getElementById("startBtn");
+    const startScreen = document.getElementById("startScreen");
     const muteBtn = document.getElementById("muteBtn");
+    const loadingScreen = document.getElementById("loadingScreen");
+    const loadingFill = document.getElementById("loadingFill");
+    const loadingBird = document.getElementById("loadingBird");
 
-    // AUDIO ONLINE
-    const bgMusic = new Audio('https://commondatastorage.googleapis.com/codeskulptor-assets/Epoq-Lepidoptera.ogg');
-    bgMusic.loop = true; bgMusic.volume = 0.3;
-    const crashSound = new Audio('https://commondatastorage.googleapis.com/codeskulptor-assets/sounddogs/explosion.mp3');
-    crashSound.volume = 0.5;
-    const coinSound = new Audio('https://commondatastorage.googleapis.com/codeskulptor-assets/week7-brrring.m4a');
-    coinSound.volume = 1.0;
-    const smashSound = new Audio('https://commondatastorage.googleapis.com/codeskulptor-assets/sounddogs/missile.mp3');
-    smashSound.volume = 0.5;
-    const giantSmashSound = new Audio('https://commondatastorage.googleapis.com/codeskulptor-assets/sounddogs/explosion.mp3');
-    giantSmashSound.volume = 0.8;
-    const winSound = new Audio('https://commondatastorage.googleapis.com/codeskulptor-assets/week7-bounce.m4a');
-    const whistleSound = new Audio('https://commondatastorage.googleapis.com/codeskulptor-assets/week7-brrring.m4a');
+    // --- AUDIO LOCALE (CORRETTO CON I TUOI NOMI FILE E CARTELLA 'audio') ---
+    const audioContext = {
+        bg: new Audio('audio/Epoq-Lepidoptera.ogg'),
+        crash: new Audio('audio/explosion.mp3'),
+        coin: new Audio('audio/week7-brrring.mp3'),
+        smash: new Audio('audio/missile.mp3'),
+        win: new Audio('audio/week7-brrring.mp3') // Riutilizziamo se non hai un file vittoria specifico
+    };
+
+    audioContext.bg.loop = true;
+    audioContext.bg.volume = 0.3;
+    audioContext.coin.volume = 1.0;
 
     let isMuted = false;
-    function playMusic() { if(!isMuted) { bgMusic.currentTime = 0; bgMusic.play().catch(e=>{}); } }
-    function stopMusic() { bgMusic.pause(); }
-    function playCrash() { if(!isMuted) { crashSound.currentTime = 0; crashSound.play(); } }
-    function playCoin() { if(!isMuted) { const s = coinSound.cloneNode(); s.volume = 1.0; s.play(); } }
-    function playSmash(isGiant) { if(!isMuted) { const s = isGiant ? giantSmashSound.cloneNode() : smashSound.cloneNode(); s.volume = isGiant ? 0.7 : 0.5; s.play(); }}
-    function playWin() { if(!isMuted) { winSound.play(); } }
-    function playWhistle() { if(!isMuted) { const s = coinSound.cloneNode(); s.playbackRate = 1.5; s.play(); }}
+
+    function playSound(type) {
+        if (isMuted) return;
+        // Usa try-catch per evitare blocchi se il file non esiste
+        try {
+            if (type === 'coin' || type === 'smash') {
+                const s = audioContext[type].cloneNode();
+                s.volume = audioContext[type].volume;
+                s.play().catch(e => { console.log("Audio play error", e); });
+            } else {
+                audioContext[type].play().catch(e => { console.log("Audio play error", e); });
+            }
+        } catch(e) { console.log("Audio missing"); }
+    }
+
+    function stopMusic() { audioContext.bg.pause(); }
 
     muteBtn.addEventListener("click", () => {
-        isMuted = !isMuted; muteBtn.textContent = isMuted ? "🔇" : "🔊";
-        if(isMuted) bgMusic.pause(); else if(isRunning) bgMusic.play();
+        isMuted = !isMuted;
+        muteBtn.textContent = isMuted ? "🔇" : "🔊";
+        if (isMuted) audioContext.bg.pause();
+        else if (isRunning) audioContext.bg.play();
     });
 
     let playerX = 0, playerY = 0;
-    let obstacles = [], coins = [];
+    let obstacles = [], coins = [], flyingNests = [];
     let lastTimestamp = 0, isRunning = false;
-    let score = 0, bestScore = 0;
-    let generation = 1;
+    let score = 0;
+    let currentLevel = 1;
+    let babiesDelivered = 0;
+    const MAX_BABIES = 3;
 
-    let isSuperMode = false; let superModeEndTime = 0; let nextThreshold = 100;
-    let isUltraMode = false; let ultraModeEndTime = 0; let nextUltraThreshold = 1000;
+    let isSuperMode = false, isUltraMode = false;
+    let powerEndTime = 0;
     let isEndingSequence = false;
     let isDragging = false;
+    let generation = 1;
 
-    let currentLabel = null;
-    let obstacleSpawnTimer = 0, coinSpawnTimer = 0;
-    let keys = { left: false, right: false, up: false, down: false };
+    let obstacleSpawnTimer = 0, coinSpawnTimer = 0, nestSpawnTimer = 0;
     let facingDirection = 1, fireballImageLoaded = true;
 
     function setInitialPlayerPosition() {
         const r = gameArea.getBoundingClientRect();
-        playerX = r.width/2 - 50; playerY = r.height - 150;
-        playerEl.style.left = playerX+"px"; playerEl.style.top = playerY+"px";
+        playerX = r.width/2 - 45; playerY = r.height - 150;
+        updatePlayerCSS();
+
         playerEl.classList.remove('dead', 'super-mode', 'ultra-mode', 'landing', 'incubating');
         playerEl.style.display = 'block';
-        updatePlayerTransform();
-        facingDirection = 1;
 
-        isCompanionActive = false;
-        companion1.style.display = 'none'; companion1.classList.remove('super-mode', 'ultra-mode');
-        companion2.style.display = 'none'; companion2.classList.remove('super-mode', 'ultra-mode');
-
-        if (generation >= 2) companion1.style.display = 'block';
-        if (generation >= 3) companion2.style.display = 'block';
-
-        sceneContainer.style.display = 'none';
-        eggsContainer.style.opacity = 1;
-        resetBackground();
+        if (currentLevel === 2) {
+            carriedBaby.style.display = 'block';
+            levelBadge.textContent = "LV.2";
+            babyCounter.style.display = "inline";
+            babyCounter.textContent = `🐣 ${babiesDelivered}/${MAX_BABIES}`;
+            gameArea.style.background = "var(--sky-fire)";
+            companion1.style.display = 'none';
+        } else {
+            carriedBaby.style.display = 'none';
+            levelBadge.textContent = "LV.1";
+            babyCounter.style.display = "none";
+            sceneContainer.style.display = 'none';
+            eggsContainer.style.opacity = 1;
+            gameArea.style.background = "var(--sky-fire)";
+        }
     }
 
-    function showLabel(text, type) {
-        if(currentLabel) currentLabel.remove();
-        currentLabel = document.createElement("div");
-        currentLabel.classList.add("super-text", type);
-        currentLabel.innerHTML = text;
-        gameArea.appendChild(currentLabel);
-        setTimeout(() => { if(currentLabel && !isEndingSequence) currentLabel.remove(); }, 2500);
+    function updatePlayerCSS() {
+        playerEl.style.left = playerX + "px";
+        playerEl.style.top = playerY + "px";
+        let scale = "scale(1)";
+        if (isUltraMode) scale = "scale(1.5)";
+        else if (isSuperMode) scale = "scale(1.2)";
+        playerEl.style.transform = `scaleX(${facingDirection}) ${scale}`;
     }
 
     function setBlueSky() { gameArea.style.background = "var(--sky-blue)"; }
     function setGardenSky() { gameArea.style.background = "var(--sky-garden)"; }
     function resetBackground() { gameArea.style.background = "var(--sky-fire)"; }
 
-    function activateSuperMode() {
-        if(isUltraMode) return;
-        isSuperMode = true; superModeEndTime = performance.now() + 10000;
-        playerEl.classList.add('super-mode');
-        if(generation >= 2) companion1.classList.add('super-mode');
-        if(generation >= 3) companion2.classList.add('super-mode');
-        showLabel("FURIA SANGUE!<br>DISTRUGGI!", "blood");
-        setBlueSky();
+    function activateMode(type) {
+        powerEndTime = performance.now() + 10000;
+        if (type === 'super') {
+            isSuperMode = true; playerEl.classList.add('super-mode'); setBlueSky();
+        } else {
+            isUltraMode = true; playerEl.classList.add('ultra-mode'); resetBackground();
+        }
     }
 
-    function deactivateSuperMode() {
-        isSuperMode = false;
-        playerEl.classList.remove('super-mode');
-        companion1.classList.remove('super-mode');
-        companion2.classList.remove('super-mode');
-        nextThreshold = Math.floor(score / 100) * 100 + 100;
-        if(!isUltraMode && !isEndingSequence) resetBackground();
-    }
-
-    function activateUltraMode() {
-        if(isSuperMode) deactivateSuperMode();
-        isUltraMode = true; ultraModeEndTime = performance.now() + 10000;
-        playerEl.classList.add('ultra-mode');
-        if(generation >= 2) companion1.classList.add('ultra-mode');
-        if(generation >= 3) companion2.classList.add('ultra-mode');
-        showLabel("GIGANTE VERDE!<br>+ COMPAGNO!", "green");
-        resetBackground();
-    }
-
-    function deactivateUltraMode() {
-        isUltraMode = false;
-        playerEl.classList.remove('ultra-mode');
-        companion1.classList.remove('ultra-mode');
-        companion2.classList.remove('ultra-mode');
-        nextUltraThreshold = Math.floor(score / 1000) * 1000 + 1000;
-        nextThreshold = Math.floor(score / 100) * 100 + 100;
-        resetBackground();
-    }
-
-    function triggerEnding() {
-        isEndingSequence = true; isRunning = false; stopMusic(); playWin();
-        obstacles.forEach(o => o.el.remove()); obstacles = [];
-        coins.forEach(c => c.el.remove()); coins = [];
-        playerEl.classList.remove('super-mode', 'ultra-mode');
-        companion1.style.display = 'none'; companion2.style.display = 'none';
-
-        setGardenSky();
-        sceneContainer.style.display = 'block';
-        showLabel("RITORNO AL NIDO...", "ending");
-
-        const r = gameArea.getBoundingClientRect();
-        const nestX = r.width * 0.55 - 45; const nestY = r.height - 330;
-        playerEl.classList.add('landing');
-        playerEl.style.left = nestX + "px"; playerEl.style.top = nestY + "px";
-
-        setTimeout(() => {
-            playerEl.classList.remove('landing');
-            playerEl.classList.add('incubating');
-            playWhistle();
-            currentLabel.innerHTML = "COVA...";
-            setTimeout(() => {
-                eggsContainer.style.opacity = 0;
-                currentLabel.innerHTML = "NUOVA VITA!";
-                playCoin();
-                setTimeout(() => {
-                    if(currentLabel) currentLabel.remove();
-                    generation++; genCountEl.textContent = generation;
-                    startNextGeneration();
-                }, 2000);
-            }, 3000);
-        }, 3000);
-    }
-
-    function startNextGeneration() {
-        isEndingSequence = false; setInitialPlayerPosition();
-        score = 0; scoreEl.textContent = "0";
+    function deactivateModes() {
         isSuperMode = false; isUltraMode = false;
-        nextThreshold = 100; nextUltraThreshold = 1000;
-        playMusic(); isRunning = true; lastTimestamp = performance.now();
+        playerEl.classList.remove('super-mode', 'ultra-mode');
+        if (!isEndingSequence) resetBackground();
+    }
+
+    // --- CARICAMENTO ---
+    function startLoadingSequence() {
+        startScreen.classList.add('hidden');
+        loadingScreen.style.display = "flex";
+
+        // SBLOCCO AUDIO AL CLICK
+        playSound('bg'); audioContext.bg.pause();
+
+        let progress = 0;
+        const interval = setInterval(() => {
+            progress += 1.5;
+            loadingFill.style.width = progress + "%";
+            loadingBird.style.left = progress + "%";
+            if(progress >= 100) {
+                clearInterval(interval);
+                setTimeout(() => {
+                    loadingScreen.style.display = "none";
+                    startGame();
+                }, 400);
+            }
+        }, 25);
+    }
+
+    function startGame() {
+        currentLevel = 1; babiesDelivered = 0; score = 0; scoreEl.textContent = "0";
+        obstacles = []; coins = []; flyingNests = [];
+        document.querySelectorAll('.obstacle, .coin, .flying-nest, .score-pop').forEach(e => e.remove());
+
+        setInitialPlayerPosition();
+        gameHeader.style.display = "flex";
+
+        isSuperMode = false; isUltraMode = false; isEndingSequence = false;
+        audioContext.bg.currentTime = 0;
+        audioContext.bg.play();
+        isRunning = true;
+        lastTimestamp = performance.now();
         requestAnimationFrame(gameLoop);
     }
 
-    function resetGame() {
-        setInitialPlayerPosition();
-        obstacles.forEach(o => o.el.remove()); obstacles = [];
-        coins.forEach(c => c.el.remove()); coins = [];
-        document.querySelectorAll('.score-pop').forEach(el => el.remove());
-        if(currentLabel) currentLabel.remove();
-        score = 0; scoreEl.textContent = "0";
-        isSuperMode = false; isUltraMode = false;
-        nextThreshold = 100; nextUltraThreshold = 1000;
-        isEndingSequence = false; isDragging = false;
-        generation = 1; genCountEl.textContent = 1;
-        lastTimestamp = performance.now();
-        resetBackground();
-    }
-
-    // --- SPAWN TESCHI E BOMBE (ALTO CONTRASTO) ---
+    // --- OGGETTI ---
     function spawnObstacle() {
-        const el = document.createElement("div");
-        el.classList.add("obstacle");
-        if(!fireballImageLoaded) el.classList.add("image-error");
-
+        const el = document.createElement("div"); el.classList.add("obstacle");
         const rand = Math.random() * 100;
-        let typeClass = 'orange'; let typeScore = 30;
-        let isBomb = false;
+        let type = 'orange', val = 30, bomb = false;
 
-        // Le bombe appaiono dopo 500 punti o nelle generazioni successive
-        if ((score > 500 || generation > 1) && rand > 85) {
-            isBomb = true;
-            typeClass = 'bomb';
-            typeScore = 0;
+        if ((score > 500 || currentLevel > 1) && rand > 85) {
+            bomb = true; type = 'bomb'; val = 0;
         } else {
-            if (rand > 90) { typeClass = 'darkred'; typeScore = 120; }
-            else if (rand > 70) { typeClass = 'green'; typeScore = 100; }
-            else if (rand > 40) { typeClass = 'bordeaux'; typeScore = 60; }
+            if (rand > 90) { type = 'darkred'; val = 120; }
+            else if (rand > 70) { type = 'green'; val = 100; }
+            else if (rand > 40) { type = 'bordeaux'; val = 60; }
         }
-
-        el.classList.add(typeClass);
-
+        el.classList.add(type);
         const r = gameArea.getBoundingClientRect();
         const x = Math.random() * (r.width - 90);
-        el.style.left = x+"px"; el.style.top = "-100px";
         gameArea.appendChild(el);
-        obstacles.push({el, x, y: -100, scoreVal: typeScore, isBomb: isBomb});
+        el.style.left = x + "px"; el.style.top = "-100px";
+        obstacles.push({el, x, y: -100, val, bomb});
     }
 
     function spawnCoin() {
         const r = gameArea.getBoundingClientRect();
-        const isHorizontal = Math.random() > 0.5;
-        const safeWidth = isHorizontal ? (r.width - 140) : (r.width - 45);
-        const startX = Math.random() * safeWidth;
-        const startY = -50;
-        for(let i = 0; i < 3; i++) {
+        const startX = Math.random() * (r.width - 140);
+        const isHoriz = Math.random() > 0.5;
+        for(let i=0; i<3; i++) {
             const el = document.createElement("div"); el.classList.add("coin");
-            let cx, cy;
-            if(isHorizontal) { cx = startX + (i * 45); cy = startY; }
-            else { cx = startX; cy = startY - (i * 45); }
-            el.style.left = cx+"px"; el.style.top = cy+"px";
+            let cx = isHoriz ? startX + (i*45) : startX;
+            let cy = isHoriz ? -50 : -50 - (i*45);
             gameArea.appendChild(el);
+            el.style.left = cx+"px"; el.style.top = cy+"px";
             coins.push({el, x: cx, y: cy});
         }
+    }
+
+    function spawnNest() {
+        const el = document.createElement("div"); el.classList.add("flying-nest");
+        const r = gameArea.getBoundingClientRect();
+        const x = Math.random() * (r.width - 80);
+        gameArea.appendChild(el);
+        el.style.left = x+"px"; el.style.top = "-50px";
+        flyingNests.push({el, x, y: -50});
     }
 
     function showExplosion(x, y, isGiant, isBomb) {
@@ -447,109 +502,115 @@
         setTimeout(() => ex.remove(), 400);
     }
 
-    function updatePlayerTransform() {
-        let scale = "scale(1)";
-        if (isUltraMode) scale = "scale(1.5)"; else if (isSuperMode) scale = "scale(1.2)";
-        playerEl.style.transform = `scaleX(${facingDirection}) ${scale}`;
-
-        if(generation >= 2) {
-            let cs = isUltraMode ? "scale(1.2)" : (isSuperMode ? "scale(1.0)" : "scale(0.8)");
-            companion1.style.transform = `scaleX(${facingDirection}) ${cs}`;
-        }
-        if(generation >= 3) {
-            let cs = isUltraMode ? "scale(1.2)" : (isSuperMode ? "scale(1.0)" : "scale(0.8)");
-            companion2.style.transform = `scaleX(${facingDirection}) ${cs}`;
-        }
+    function checkCol(el1, el2) {
+        const r1 = el1.getBoundingClientRect();
+        const r2 = el2.getBoundingClientRect();
+        const p = 15;
+        return !(r1.right-p < r2.left || r1.left+p > r2.right || r1.bottom-p < r2.top || r1.top+p > r2.bottom);
     }
 
-    function updatePlayerPosition() {
-        if(isEndingSequence) return;
-
-        if(generation >= 2) {
-            const c1X = playerX - (facingDirection * 60); const c1Y = playerY + 40;
-            companion1.style.left = c1X + "px"; companion1.style.top = c1Y + "px";
-        }
-        if(generation >= 3) {
-            const c2X = playerX - (facingDirection * 100); const c2Y = playerY - 40;
-            companion2.style.left = c2X + "px"; companion2.style.top = c2Y + "px";
-        }
-        updatePlayerTransform();
+    function triggerLevel1Ending() {
+        isEndingSequence = true; isRunning = false; stopMusic(); playSound('win');
+        obstacles.forEach(o => o.el.remove()); coins.forEach(c => c.el.remove());
+        deactivateModes();
+        setGardenSky();
+        sceneContainer.style.display = 'block';
+        const r = gameArea.getBoundingClientRect();
+        playerEl.classList.add('landing');
+        playerEl.style.left = (r.width * 0.55 - 45) + "px";
+        playerEl.style.top = (r.height - 330) + "px";
+        setTimeout(() => {
+            playerEl.classList.remove('landing'); playerEl.classList.add('incubating');
+            playSound('coin');
+            setTimeout(() => {
+                eggsContainer.style.opacity = 0;
+                setTimeout(() => {
+                    isEndingSequence = false;
+                    currentLevel = 2;
+                    setInitialPlayerPosition();
+                    audioContext.bg.play(); isRunning = true; lastTimestamp = performance.now();
+                    requestAnimationFrame(gameLoop);
+                }, 2000);
+            }, 3000);
+        }, 3000);
     }
 
-    function checkCollision(r1, r2) {
-        const p = 20; return !(r1.right-p < r2.left || r1.left+p > r2.right || r1.bottom-p < r2.top || r1.top+p > r2.bottom);
-    }
-
-    function endGame() {
+    function gameOver(victory) {
         isRunning = false; isDragging = false;
-        playerEl.classList.add('dead'); stopMusic(); playCrash();
-        if(score > bestScore) bestScore = score;
+        stopMusic();
         const ov = document.createElement("div"); ov.classList.add("game-over-overlay");
-        ov.innerHTML = `<h2>GAME OVER</h2><div>Score: <strong>${Math.floor(score)}</strong></div>
-        <div class="best-score">Migliore: ${Math.floor(bestScore)}</div>
-        <p>Premi <strong>GIOCA ORA</strong></p>`;
+        if (victory) {
+            playSound('win');
+            ov.innerHTML = `<h2>VITTORIA!</h2><div style="color:white; font-size:1.2rem">Hai salvato la natura!</div><br><button class="btn" id="restart">RITORNA</button>`;
+        } else {
+            playerEl.classList.add('dead'); playSound('crash');
+            ov.innerHTML = `<h2>GAME OVER</h2><div>Score: <strong>${Math.floor(score)}</strong></div><button class="btn" id="restart">INIZIO GIOCO</button>`;
+        }
+        gameHeader.style.display = "none";
         gameArea.appendChild(ov);
+        document.getElementById("restart").onclick = () => {
+            ov.remove();
+            startLoadingSequence();
+        };
     }
 
     function gameLoop(ts) {
         if(!isRunning) return;
         const dt = ts - lastTimestamp; lastTimestamp = ts;
-        if(score >= 3000 && !isEndingSequence) { triggerEnding(); return; }
 
-        updatePlayerPosition();
+        if (currentLevel === 1 && score >= 3000 && !isEndingSequence) { triggerLevel1Ending(); return; }
+        if ((isSuperMode || isUltraMode) && ts > powerEndTime) deactivateModes();
+        if (currentLevel === 1 && !isSuperMode && !isUltraMode) {
+            if (score >= 1000 && score % 1000 < 50) activateMode('ultra');
+            else if (score >= 100 && score % 200 < 30) activateMode('super');
+        }
 
-        if(score >= nextUltraThreshold && !isUltraMode) activateUltraMode();
-        else if(score >= nextThreshold && !isSuperMode && !isUltraMode) activateSuperMode();
-        if(isUltraMode && ts > ultraModeEndTime) deactivateUltraMode();
-        if(isSuperMode && ts > superModeEndTime) deactivateSuperMode();
-
-        const baseSpeed = 180;
-        const speedIncrease = score * 0.15;
-        const maxSpeed = 500;
-        const speed = Math.min(baseSpeed + speedIncrease, maxSpeed);
-        const dy = (speed * dt)/1000;
+        const dy = (200 + score * 0.1) * dt / 1000;
 
         for (let i = obstacles.length - 1; i >= 0; i--) {
             let o = obstacles[i]; o.y += dy; o.el.style.top = o.y + "px";
-            if (o.y > gameArea.clientHeight + 100) { o.el.remove(); obstacles.splice(i, 1); continue; }
-            const pRect = playerEl.getBoundingClientRect(); const oRect = o.el.getBoundingClientRect();
-
-            if (checkCollision(pRect, oRect)) {
-                if (o.isBomb) {
-                    showExplosion(o.x, o.y, false, true);
-                    showLabel("BOMBA!!!", "danger");
-                    endGame(); return;
-                }
+            if (o.y > window.innerHeight) { o.el.remove(); obstacles.splice(i, 1); continue; }
+            if (checkCol(playerEl, o.el)) {
+                if (o.bomb) { gameOver(false); return; }
                 if (isSuperMode || isUltraMode) {
-                    showExplosion(o.x, o.y, isUltraMode, false); playSmash(isUltraMode);
-                    o.el.remove(); obstacles.splice(i, 1);
-                    score += o.scoreVal;
-                    showScorePop(o.x, o.y, o.scoreVal, isUltraMode ? "green" : null);
-                } else { endGame(); return; }
+                    playSound('smash'); o.el.remove(); obstacles.splice(i, 1);
+                    score += o.val; scoreEl.textContent = score;
+                    showExplosion(o.x, o.y, isUltraMode, false);
+                } else { gameOver(false); return; }
             }
         }
 
         for (let i = coins.length - 1; i >= 0; i--) {
             let c = coins[i]; c.y += dy; c.el.style.top = c.y + "px";
-            if (c.y > gameArea.clientHeight + 100) { c.el.remove(); coins.splice(i, 1); continue; }
-            const pRect = playerEl.getBoundingClientRect(); const cRect = c.el.getBoundingClientRect();
-
-            let hit = checkCollision(pRect, cRect);
-            if (!hit && generation >= 2) hit = checkCollision(companion1.getBoundingClientRect(), cRect);
-            if (!hit && generation >= 3) hit = checkCollision(companion2.getBoundingClientRect(), cRect);
-
-            if (hit) { playCoin(); score += 50; showScorePop(c.x, c.y, 50); c.el.remove(); coins.splice(i, 1); }
+            if (c.y > window.innerHeight) { c.el.remove(); coins.splice(i, 1); continue; }
+            if (checkCol(playerEl, c.el)) {
+                playSound('coin'); score += 50; scoreEl.textContent = score;
+                c.el.remove(); coins.splice(i, 1);
+            }
         }
 
-        obstacleSpawnTimer += dt; if(obstacleSpawnTimer > 1100) { obstacleSpawnTimer = 0; spawnObstacle(); }
+        if (currentLevel === 2) {
+            for (let i = flyingNests.length - 1; i >= 0; i--) {
+                let n = flyingNests[i]; n.y += dy; n.el.style.top = n.y + "px";
+                if (n.y > window.innerHeight) { n.el.remove(); flyingNests.splice(i, 1); continue; }
+                if (checkCol(playerEl, n.el)) {
+                    playSound('win'); n.el.remove(); flyingNests.splice(i, 1);
+                    babiesDelivered++; babyCounter.textContent = `🐣 ${babiesDelivered}/${MAX_BABIES}`;
+                    if (babiesDelivered >= MAX_BABIES) { gameOver(true); return; }
+                }
+            }
+        }
+
+        obstacleSpawnTimer += dt; if(obstacleSpawnTimer > 1200) { obstacleSpawnTimer = 0; spawnObstacle(); }
         coinSpawnTimer += dt; if(coinSpawnTimer > 2000) { coinSpawnTimer = 0; spawnCoin(); }
-        score += dt * 0.01; scoreEl.textContent = Math.floor(score);
+        if (currentLevel === 2) { nestSpawnTimer += dt; if(nestSpawnTimer > 4000) { nestSpawnTimer = 0; spawnNest(); } }
+
         requestAnimationFrame(gameLoop);
     }
 
     function showScorePop(x, y, amount, style) {
         const pop = document.createElement("div"); pop.classList.add("score-pop");
-        if(style === "green") { pop.style.color = "#39ff14"; pop.style.fontSize = "1.8rem"; pop.style.textShadow = "0 0 10px white"; }
+        if(style === "green") { pop.style.color = "#39ff14"; pop.style.textShadow = "0 0 10px #39ff14"; }
         pop.textContent = `+${amount}`; pop.style.left = x + "px"; pop.style.top = y + "px";
         gameArea.appendChild(pop); setTimeout(() => pop.remove(), 800);
     }
@@ -557,34 +618,43 @@
     function moveP(e) {
         if(isEndingSequence) return;
         const r = gameArea.getBoundingClientRect();
-        const px = e.clientX - r.left; const py = e.clientY - r.top;
-        let nx = px - 45; let ny = py - 45;
-        if(nx < playerX) facingDirection = -1; else facingDirection = 1;
+
+        // Supporto Touch/Mouse
+        const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+        const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+
+        let nx = clientX - r.left - 45;
+        let ny = clientY - r.top - 45;
+
+        if (nx < playerX) facingDirection = -1; else facingDirection = 1;
         playerX = Math.max(0, Math.min(r.width - 90, nx));
         playerY = Math.max(0, Math.min(r.height - 90, ny));
-        playerEl.style.left = playerX+"px"; playerEl.style.top = playerY+"px";
-        updatePlayerPosition();
+        updatePlayerCSS();
     }
 
-    gameArea.addEventListener("pointerdown", e => { if(isRunning && !isEndingSequence) { e.preventDefault(); isDragging = true; moveP(e); } });
-    window.addEventListener("pointermove", e => { if(isRunning && !isEndingSequence && isDragging) { e.preventDefault(); moveP(e); } });
-    window.addEventListener("pointerup", () => isDragging = false);
-
-    startBtn.addEventListener("click", () => {
-        const ov = gameArea.querySelector(".game-over-overlay"); if(ov) ov.remove();
-        resetGame(); playMusic(); isRunning = true; lastTimestamp = performance.now();
-        requestAnimationFrame(gameLoop);
+    // LISTENER UNIFICATI (PC e Mobile)
+    gameArea.addEventListener('mousedown', (e) => {
+        if(isRunning && !isEndingSequence) { isDragging = true; moveP(e); }
     });
+    window.addEventListener('mousemove', (e) => {
+        if(isRunning && isDragging) { e.preventDefault(); moveP(e); }
+    });
+    window.addEventListener('mouseup', () => isDragging = false);
+
+    // TOUCH EVENTS
+    gameArea.addEventListener('touchstart', (e) => {
+        if(isRunning && !isEndingSequence) { isDragging = true; moveP(e); }
+    }, {passive: false});
+    window.addEventListener('touchmove', (e) => {
+        if(isRunning && isDragging) { e.preventDefault(); moveP(e); }
+    }, {passive: false});
+    window.addEventListener('touchend', () => isDragging = false);
+
+    startBtn.addEventListener("click", startLoadingSequence);
 
     window.addEventListener("load", () => {
-        const i = new Image(); i.src='fire-36.gif'; i.onload=()=>{fireballImageLoaded=true};
-        setInitialPlayerPosition();
-        const ov = document.createElement("div"); ov.classList.add("game-over-overlay");
-        ov.innerHTML = `<h2>UCCELLO DI FUOCO</h2><p>100 Pts: <strong>SANGUE</strong><br>1000 Pts: <strong>GIGANTE</strong><br>3000 Pts: <strong>COVA E RINASCI!</strong></p><p>Premi <strong>GIOCA ORA</strong></p>`;
-        gameArea.appendChild(ov);
+        const i = new Image(); i.src='bird-sprite-removebg-preview.png';
     });
 </script>
 </body>
-
-
 </html>
