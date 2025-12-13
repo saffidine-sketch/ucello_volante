@@ -2,7 +2,7 @@
 <html lang="it">
 <head>
     <meta charset="UTF-8" />
-    <title>Uccello di Fuoco - SAFE MODE</title>
+    <title>Uccello di Fuoco - FINAL MASTER</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
     <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700&family=Lora:wght@400;700&family=Fredoka+One&display=swap" rel="stylesheet">
     <style>
@@ -57,7 +57,7 @@
         }
         .loading-quote-bottom { font-family: 'Fredoka One', cursive; font-size: 1.1rem; color: #81c784; }
         .loading-logo { font-family: 'Fredoka One', cursive; font-size: 2.2rem; color: #fdd835; text-shadow: 2px 2px 0px #5d4037; display: flex; align-items: center; gap: 10px; }
-        .loading-logo::before { content: ''; font-size: 1.8rem; }
+        .loading-logo::before { content: '🀄'; font-size: 1.8rem; }
 
         /* OVERLAYS */
         .game-over-overlay {
@@ -67,6 +67,10 @@
             border: 8px solid #b87333; margin: 10px; border-radius: 12px;
             box-shadow: inset 0 0 20px #000, 0 0 0 4px #5e3b1f, inset 0 0 0 2px #eecfa1;
             padding: 20px;
+        }
+        .game-over-overlay.sunset-theme {
+            background: linear-gradient(to bottom, #ff512f 0%, #dd2476 60%, #2c3e50 100%);
+            border: none; box-shadow: none;
         }
         .game-over-overlay h2 {
             font-family: 'Cinzel', serif; font-size: 2.8rem; font-weight: 700;
@@ -113,9 +117,6 @@
             filter: sepia(100%) saturate(2000%) hue-rotate(20deg) brightness(120%);
             pointer-events: none;
         }
-        /* Fallback se manca immagine */
-        .player:empty { background-color: transparent; }
-
         .chick-follower {
             position: absolute; width: 40px; height: 40px;
             background-image: url('bird-sprite-removebg-preview.png');
@@ -213,7 +214,7 @@
                 </div>
                 <div class="loading-quote-bottom">- vita e amore fano la differenza</div>
             </div>
-            <div class="loading-logo">by saffi </div>
+            <div class="loading-logo">Vita Mahjong</div>
         </div>
 
         <div class="game-over-overlay" id="startScreen">
@@ -275,7 +276,6 @@
     const loadingFill = document.getElementById("loadingFill");
     const loadingBird = document.getElementById("loadingBird");
 
-    // AUDIO
     const audioContext = {
         bg: new Audio('audio/Epoq-Lepidoptera.ogg'),
         crash: new Audio('audio/explosion.mp3'),
@@ -301,7 +301,6 @@
         if (isMuted) audioContext.bg.pause(); else if (isRunning) audioContext.bg.play();
     });
 
-    // VARIABLES
     let playerX = 0, playerY = 0;
     let obstacles = [], coins = [], flyingNests = [];
     let lastTimestamp = 0, isRunning = false;
@@ -421,9 +420,7 @@
 
     function startLoadingSequence() {
         startScreen.classList.add('hidden'); loadingScreen.style.display = "flex";
-
         try { audioContext.bg.play().catch(e=>{}); } catch(e){}
-
         let progress = 0;
         const interval = setInterval(() => {
             progress += 0.5; loadingFill.style.width = progress + "%"; loadingBird.style.left = progress + "%";
@@ -459,11 +456,18 @@
     }
 
     function resetToTitle() {
-        const ov = document.querySelector(".game-over-overlay"); if(ov) ov.remove();
-        gameHeader.style.display = "none";
-        currentLevel = 1; score = 0; babiesDelivered = 0; chicksFed = 0;
-        startScreen.classList.remove("hidden");
+        // RESET COMPLETO AL MENU INIZIALE
+        const ovs = document.querySelectorAll(".game-over-overlay");
+        ovs.forEach(o => o.remove());
 
+        gameHeader.style.display = "none";
+        confidenceWrapper.style.display = 'none';
+        learningChicksDOM.forEach(c => c.style.display = 'none');
+
+        currentLevel = 1; score = 0; babiesDelivered = 0; chicksFed = 0;
+
+        startScreen.classList.remove("hidden");
+        // Ripristina l'HTML iniziale del menu
         startScreen.innerHTML = `
             <h2>UCCELLO DI FUOCO</h2>
             <div class="instructions">
@@ -476,6 +480,15 @@
             <button class="btn" id="startBtn">INIZIO GIOCO</button>
         `;
         document.getElementById("startBtn").addEventListener("click", startLoadingSequence);
+
+        // Pulisci schermo
+        obstacles.forEach(o => o.el.remove()); obstacles = [];
+        coins.forEach(c => c.el.remove()); coins = [];
+        flyingNests.forEach(n => n.el.remove()); flyingNests = [];
+
+        playerEl.classList.remove('dead');
+        gameArea.style.background = "var(--sky-fire)";
+        sceneContainer.style.display = 'block';
     }
 
     function spawnObstacle() {
@@ -625,8 +638,6 @@
     function startGrandFinale() {
         const ov = document.createElement("div"); ov.classList.add("game-over-overlay");
         ov.classList.add("sunset-theme");
-        ov.style.background = "linear-gradient(to bottom, #ff512f 0%, #dd2476 60%, #2c3e50 100%)";
-        ov.style.border = "none"; ov.style.boxShadow = "none";
 
         ov.innerHTML = `
             <h2 style="font-size:3.5rem; text-shadow:2px 2px 10px #000;">FAMIGLIA RIUNITA</h2>
@@ -663,7 +674,7 @@
         } else {
             ov.innerHTML = `<h2>GAME OVER</h2><div>Score: <strong>${Math.floor(score)}</strong></div><button class="btn" id="restart">INIZIO GIOCO</button>`;
             gameArea.appendChild(ov);
-            document.getElementById("restart").onclick = () => { ov.remove(); startLoadingSequence(); };
+            document.getElementById("restart").onclick = () => resetToTitle();
         }
         gameHeader.style.display = "none";
     }
